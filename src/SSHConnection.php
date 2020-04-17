@@ -78,14 +78,16 @@ class SSHConnection
 
         if ($this->privateKeyPath) {
             $key = new RSA();
-            $key->loadKey(file_get_contents($this->privateKeyPath));
+            echo "Use pass " . $this->password . PHP_EOL;
+            $key->setPassword($this->password);
+            echo $key->loadKey(file_get_contents($this->privateKeyPath), RSA::PRIVATE_FORMAT_PKCS1);
             $authenticated = $this->ssh->login($this->username, $key);
             if (!$authenticated) {
                 throw new RuntimeException('Error authenticating with public-private key pair.');
             }
         }
 
-        if ($this->password) {
+        if ($this->password && empty($this->privateKeyPath)) {
             $authenticated = $this->ssh->login($this->username, $this->password);
             if (!$authenticated) {
                 throw new RuntimeException('Error authenticating with password.');
@@ -93,7 +95,7 @@ class SSHConnection
         }
 
         $this->connected = true;
-
+        echo "Connected" . PHP_EOL;
         return $this;
     }
 
