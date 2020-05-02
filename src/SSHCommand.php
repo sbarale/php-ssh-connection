@@ -14,6 +14,15 @@ class SSHCommand
     private $command;
     private $output;
     private $error;
+    private $exit_status;
+
+    /**
+     * @return mixed
+     */
+    public function getExitStatus()
+    {
+        return $this->exit_status;
+    }
 
     public function __construct(SSH2 $ssh, string $command)
     {
@@ -27,6 +36,7 @@ class SSHCommand
     {
         $this->ssh->enableQuietMode();
         $this->output = $this->ssh->exec($this->command);
+        $this->exit_status = $this->ssh->exit_status;
         $this->error = $this->ssh->getStdError();
     }
 
