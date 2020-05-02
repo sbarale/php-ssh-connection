@@ -36,7 +36,7 @@ class SSHCommand
     {
         $this->ssh->enableQuietMode();
         $this->output = $this->ssh->exec($this->command);
-        $this->exit_status = $this->ssh->exit_status;
+        $this->exit_status = $this->ssh->getExitStatus();
         $this->error = $this->ssh->getStdError();
     }
 
