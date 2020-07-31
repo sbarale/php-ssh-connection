@@ -17,6 +17,7 @@ class SSHConnection
     private $port = 22;
     private $username;
     private $password;
+    private $privateKey;
     private $privateKeyPath;
     private $connected = false;
     private $ssh;
@@ -45,7 +46,13 @@ class SSHConnection
         return $this;
     }
 
-    public function withPrivateKey(string $privateKeyPath): self
+    public function withPrivateKey(string $privateKey): self
+    {
+        $this->privateKey = $privateKey;
+        return $this;
+    }
+
+    public function withPrivateKeyPath(string $privateKeyPath): self
     {
         $this->privateKeyPath = $privateKeyPath;
         return $this;
@@ -76,18 +83,22 @@ class SSHConnection
             throw new RuntimeException('Error connecting to server.');
         }
 
-        if ($this->privateKeyPath) {
+        if ($this->privateKeyPath || $this->privateKey) {
             $key = new RSA();
 //            echo "Use pass " . $this->password . PHP_EOL;
             $key->setPassword($this->password);
-            $key->loadKey(file_get_contents($this->privateKeyPath), RSA::PRIVATE_FORMAT_PKCS1);
+            if (!empty($this->privateKey)) {
+                $key->loadKey($this->privateKey, RSA::PRIVATE_FORMAT_PKCS1);
+            } else {
+                $key->loadKey(file_get_contents($this->privateKeyPath), RSA::PRIVATE_FORMAT_PKCS1);
+            }
             $authenticated = $this->ssh->login($this->username, $key);
             if (!$authenticated) {
                 throw new RuntimeException('Error authenticating with public-private key pair.');
             }
         }
 
-        if ($this->password && empty($this->privateKeyPath)) {
+        if ($this->password && empty($this->privateKeyPath) && empty($this->privateKey)) {
             $authenticated = $this->ssh->login($this->username, $this->password);
             if (!$authenticated) {
                 throw new RuntimeException('Error authenticating with password.');
